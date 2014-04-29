@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<meta charset="utf-8" />
+ <meta name="viewport" 
+   content="width=device-width, initial-scale=1.0, user-scalable=no">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+	<head>
+		<title>Inas Performance Karaoke</title>
+	</head>
+	<style type="text/css">
+		html
+		{
+			height: 100%;
+		}
+		body
+			{
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				margin: 0;
+				padding: 0;
+				background-color:#e1e1e1;
+			}
+		#frameRate
+			{
+				position: absolute;
+				right: 10px;
+				bottom: 10px;
+				z-index: 100;
+				font-size: 25px;
+				font-family: Arial, Helvetica, sans-serif;
+			}
+	</style>
+	<script type="text/javascript">
+		var STAGE_WIDTH = 1024;
+		var STAGE_HEIGHT = 768;
+		var FRAME_TIMES = [];
+		var context = null;
+		var text = null;
+		var START_TIME = 0;
+		var allBeats = [];
+		var currentBeats = [];
+		window.onload = init;		
+		function init()
+		{
+			STAGE_WIDTH = document.body.offsetWidth;
+			STAGE_HEIGHT = document.body.offsetHeight;
+			// Create the canvas
+			var mainCanvas = document.createElement("canvas");
+			mainCanvas.id = "mainCanvas";
+			mainCanvas.setAttribute("width", STAGE_WIDTH);
+			mainCanvas.setAttribute("height", STAGE_HEIGHT);
+			document.body.insertBefore(mainCanvas, document.body.firstChild);
+
+			context = mainCanvas.getContext("2d");
+			// load the performance 
+			var request = new XMLHttpRequest();
+		        request.open("GET", "mytext.xml", false);
+		        request.send(null);
+		    var text = request.responseText;
+		    // create all the beats for the performance
+		    // Create the particles
+			for (var i = 0; i < 2; i++)
+			{
+				allBeats.push(new Beat(800));
+			}
+			// Start the animation
+			setInterval(loop, 1);
+			START_TIME = new Date().getTime();
+			//alert(text);
+		}
+		function loop()
+		{
+			// Limit the frame time array to the last 30 frames
+			if (FRAME_TIMES.length > 30)
+			{
+				FRAME_TIMES.splice(0, 1);
+			}
+			var currTime = new Date().getTime();
+			FRAME_TIMES.push(currTime);
+			// Calculate the framerate based upon the difference between the absolute times of the oldest and newest frames, subdivided by how many frames were drawn inbetween
+			var frameRate = document.getElementById("frameRate");
+			var frameRateText = 1000 / ((currTime - FRAME_TIMES[0]) / (FRAME_TIMES.length - 1)) + "";
+			frameRateText = frameRateText.replace(/(^[^.]+\...).*/, "$1");
+			frameRateText += " FPS";
+			frameRate.innerHTML = frameRateText;
+			var timeDelta = currTime - FRAME_TIMES[FRAME_TIMES.length - 2];
+			if (isNaN(timeDelta))
+			{
+				timeDelta = 0;
+			}
+			// clean canvas
+			context.clearRect(0, 0, STAGE_WIDTH, STAGE_HEIGHT);
+			// fill current beats from allbeats
+			for (var b in allBeats)
+			{
+				//console.log("First Beat Time:"+b.getTime());
+				currentBeats.push(b);
+			}
+			// Draw each current beat
+			var totalTime = currTime - START_TIME;
+			for (var b in currentBeats)
+			{
+				currentBeats[b].draw(timeDelta,totalTime);
+			}
+			//animate();
+		}
+		function animate()
+		{	
+			var currTime = new Date().getTime();
+					
+			/*if(( currTime - START_TIME) > 800)
+			{
+				context.fillStyle = "rgb(200,0,0)";
+  				context.fillRect (10, 10, 55, 50);
+			}*/
+		}
+		function Beat(timing)
+		{
+			this.x = Math.random()*STAGE_WIDTH;
+			this.y = 50;
+			this.velocity = 50;
+			this.time = timing;
+			this.normalColor = "#cc0000";
+			this.highlightColor = "#0000cc";
+			this.fadeColor = "#cccccc";
+
+			this.draw = draw;
+		}
+		function draw(timeDelta, totalTime)
+		{
+				var nextY = y + 1 * velocity * (timeDelta / 1000);
+				if( totalTime < time)
+					context.fillStyle = normalColor;
+				else if( totalTime > time + 500)
+					context.fillStyle = fadeColor;
+				else 
+					context.fillStyle = highlightColor;
+  				context.fillRect (x, y, 50, 50);
+				this.y = nextY;
+				console.log('%d', timeDelta);
+		}
+	</script>
+	<body>
+		<!--<canvas id="mainCanvas" />
+		<script src="{{ static_url("websocket.js") }}" type="text/javascript"></script>
+		-->
+		<div id="frameRate">
+		</div>
+	</body>
+</html>
