@@ -62,9 +62,9 @@
 		    var text = request.responseText;
 		    // create all the beats for the performance
 		    // Create the particles
-			for (var i = 0; i < 2; i++)
+			for (var i = 0; i < 10; i++)
 			{
-				allBeats.push(new Beat(800));
+				allBeats.push(new Beat(1200*i));
 			}
 			// Start the animation
 			setInterval(loop, 1);
@@ -91,19 +91,30 @@
 			{
 				timeDelta = 0;
 			}
-			// clean canvas
-			context.clearRect(0, 0, STAGE_WIDTH, STAGE_HEIGHT);
-			// fill current beats from allbeats
-			for (var b in allBeats)
-			{
-				//console.log("First Beat Time:"+b.getTime());
-				currentBeats.push(b);
-			}
-			// Draw each current beat
+			// clean canvas			
 			var totalTime = currTime - START_TIME;
+			context.clearRect(0, 0, STAGE_WIDTH, STAGE_HEIGHT);
+			// move next beats to the current Beat array
+			for (var b in allBeats)
+			{			
+				if(  allBeats[b].time-5000 < totalTime)	//add them 5seconds before they need to be ready
+				{
+					currentBeats.push(allBeats[b]);				
+					allBeats.splice(b, 1);
+				}
+			}
+			// Draw the current beats
 			for (var b in currentBeats)
 			{
 				currentBeats[b].draw(timeDelta,totalTime);
+			}
+			// Delete old beats
+			for (var b in currentBeats)
+			{
+				if( (totalTime-currentBeats[b].time) > 2000)	//add them 5seconds before they need to be ready
+				{
+					currentBeats.splice(b, 1);
+				}
 			}
 			//animate();
 		}
@@ -126,22 +137,21 @@
 			this.normalColor = "#cc0000";
 			this.highlightColor = "#0000cc";
 			this.fadeColor = "#cccccc";
-
-			this.draw = draw;
+			this.draw  = draw;
 		}
 		function draw(timeDelta, totalTime)
 		{
-				var nextY = y + 1 * velocity * (timeDelta / 1000);
-				if( totalTime < time)
-					context.fillStyle = normalColor;
-				else if( totalTime > time + 500)
-					context.fillStyle = fadeColor;
-				else 
-					context.fillStyle = highlightColor;
-  				context.fillRect (x, y, 50, 50);
-				this.y = nextY;
-				console.log('%d', timeDelta);
+			var nextY = this.y + 1 * this.velocity * (timeDelta / 1000);
+			if( totalTime < this.time)
+				context.fillStyle = this.normalColor;
+			else if( totalTime > this.time + 500)
+				context.fillStyle = this.fadeColor;
+			else 
+				context.fillStyle = this.highlightColor;
+			context.fillRect (this.x, this.y, 50, 50);
+			this.y = nextY;
 		}
+
 	</script>
 	<body>
 		<!--<canvas id="mainCanvas" />
