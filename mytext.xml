@@ -1,6 +1,10 @@
+<?xml version="1.0"?>
 <performance>
-	<beat time="300" group="3" icon="1">
-	</beat>
-	<beat time="800" group="2" icon="2">
-	</beat>
+	<beat time="5500" group="1" icon="1"/>
+	<beat time="6000" group="2" icon="0"/>
+	<beat time="6500" group="3" icon="0"/>
+	<beat time="7000" group="4" icon="1"/>
+	<beat time="7500" group="5" icon="0"/>
+	<beat time="8000" group="6" icon="0"/>
+	<beat time="8500" group="7" icon="1"/>
 </performance>

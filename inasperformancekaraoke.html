@@ -36,12 +36,17 @@
 	<script type="text/javascript">
 		var STAGE_WIDTH = 1024;
 		var STAGE_HEIGHT = 768;
+		var PREP_TIME = 5000;
+		var START_Y = -100;
+		var ACTIVATION_Y = 750;
 		var FRAME_TIMES = [];
 		var context = null;
-		var text = null;
 		var START_TIME = 0;
 		var allBeats = [];
 		var currentBeats = [];
+		var XPOS1 = 100;
+		var XPOS2 = 300;
+		var XPOS3 = 500;
 		window.onload = init;		
 		function init()
 		{
@@ -55,21 +60,41 @@
 			document.body.insertBefore(mainCanvas, document.body.firstChild);
 
 			context = mainCanvas.getContext("2d");
-			// load the performance 
-			var request = new XMLHttpRequest();
-		        request.open("GET", "mytext.xml", false);
-		        request.send(null);
-		    var text = request.responseText;
-		    // create all the beats for the performance
+			// load the performance & create all the beats for the performance
+			parsePerformanceXML();					    
 		    // Create the particles
-			for (var i = 0; i < 10; i++)
+			/*for (var i = 0; i < 10; i++)
 			{
-				allBeats.push(new Beat(1200*i));
-			}
+				allBeats.push(new Beat(5500+1000*i,START_Y));
+			}*/
 			// Start the animation
 			setInterval(loop, 1);
 			START_TIME = new Date().getTime();
 			//alert(text);
+		}
+		function parsePerformanceXML()
+		{
+			var request = new XMLHttpRequest();
+		        request.open("GET", "mytext.xml", false);
+		        request.send(null);
+		    var text = request.responseText;
+
+			var parser=new DOMParser();
+			var xmlobject=parser.parseFromString(text,"text/xml");
+			//var string = (new XMLSerializer()).serializeToString(xmlobject);
+  			
+  			//console.log (xmlobject.firstChild.childNodes);
+  			
+  			var xmlBeats=xmlobject.getElementsByTagName("beat");
+			for(var i=0; i<xmlBeats.length; i++)
+			{
+				var xmlBeat = xmlBeats[i];
+				var btime = parseInt(xmlBeat.attributes.getNamedItem("time").value);
+				var bgroup = parseInt(xmlBeat.attributes.getNamedItem("group").value);
+				var bicon = parseInt(xmlBeat.attributes.getNamedItem("icon").value);
+				allBeats.push(new Beat(btime,bgroup,bicon,START_Y));
+			}
+			return xmlobject;
 		}
 		function loop()
 		{
@@ -94,6 +119,9 @@
 			// clean canvas			
 			var totalTime = currTime - START_TIME;
 			context.clearRect(0, 0, STAGE_WIDTH, STAGE_HEIGHT);
+			// draw activation line
+			context.fillStyle = "#131313";
+			context.fillRect (0, ACTIVATION_Y-1, STAGE_WIDTH, 2);
 			// move next beats to the current Beat array
 			for (var b in allBeats)
 			{			
@@ -128,12 +156,14 @@
   				context.fillRect (10, 10, 55, 50);
 			}*/
 		}
-		function Beat(timing)
+		function Beat(inTime, inGroup, inIcon, yposition)
 		{
 			this.x = Math.random()*STAGE_WIDTH;
-			this.y = 50;
-			this.velocity = 50;
-			this.time = timing;
+			this.y = yposition;
+			this.velocity = (ACTIVATION_Y -25 - START_Y)/PREP_TIME*1000; // 25 for the height of the Beat Icon
+			this.time = inTime;
+			this.group = inGroup;
+			this.icon = inIcon;
 			this.normalColor = "#cc0000";
 			this.highlightColor = "#0000cc";
 			this.fadeColor = "#cccccc";
@@ -144,11 +174,41 @@
 			var nextY = this.y + 1 * this.velocity * (timeDelta / 1000);
 			if( totalTime < this.time)
 				context.fillStyle = this.normalColor;
-			else if( totalTime > this.time + 500)
+			else if( totalTime > this.time + 200)
 				context.fillStyle = this.fadeColor;
 			else 
 				context.fillStyle = this.highlightColor;
-			context.fillRect (this.x, this.y, 50, 50);
+			if(this.icon%2)
+			{
+				if( this.group == 1 || this.group == 2 || this.group == 5 || this.group == 7)
+				{ //all persons or first guy
+					context.fillRect (XPOS1, this.y, 50, 50);
+				}
+				if( this.group == 1 || this.group == 3 || this.group == 5 || this.group == 6)
+				{
+					context.fillRect (XPOS2, this.y, 50, 50);
+				}
+				if( this.group == 1 || this.group == 4 || this.group == 6 || this.group == 7)
+				{
+					context.fillRect (XPOS3, this.y, 50, 50);
+				}
+			}
+			else
+			{	 context.beginPath();
+				if( this.group == 1 || this.group == 2 || this.group == 5 || this.group == 7)
+				{ //all persons or first guy
+					context.arc (XPOS1+25, this.y+25, 25, 0, 2 * Math.PI, false);
+				}
+				if( this.group == 1 || this.group == 3 || this.group == 5 || this.group == 6)
+				{
+					context.arc (XPOS2+25, this.y+25, 25, 0, 2 * Math.PI, false);
+				}
+				if( this.group == 1 || this.group == 4 || this.group == 6 || this.group == 7)
+				{
+					context.arc (XPOS3+25, this.y+25, 25, 0, 2 * Math.PI, false);
+				}
+				context.fill();
+			}
 			this.y = nextY;
 		}
 
